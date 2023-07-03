@@ -68,8 +68,13 @@ const loginUser = asyncHandler(async (req, res) => {
 // @route: GET /api/users/profile
 // @access: private
 const getUserProfile = asyncHandler(async (req, res) => {
-  res.send({
-    message: 'user profile',
+  const { _id, name, email } = await User.findById(req.user._id);
+  console.log(req.user);
+
+  res.status(200).json({
+    _id: _id,
+    name,
+    email,
   });
 });
 

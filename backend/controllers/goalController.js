@@ -1,17 +1,20 @@
 const asyncHandler = require('express-async-handler');
 const Goal = require('../models/goalModel');
+const User = require('../models/userModel');
 // @desc: get all goals
 // @route: GET /api/goals
 // @access: private
 const getGoal = asyncHandler(async (req, res) => {
-  const goals = await Goal.find({});
+  const goals = await Goal.find({
+    user: req.user._id,
+  });
   res.status(200).json(goals);
 });
 // @desc: set goal
 // @route: POST /api/goals
 // @access: private
 const setGoal = asyncHandler(async (req, res) => {
-  console.log(req.body);
+  // check if the goal is provided
   if (!req.body.goal) {
     res.status(400);
     throw new Error('Please provide a goal');
@@ -19,6 +22,7 @@ const setGoal = asyncHandler(async (req, res) => {
 
   const goal = await Goal.create({
     text: req.body.goal,
+    user: req.user._id,
   });
 
   res.status(200).json(goal);
@@ -35,6 +39,20 @@ const updateGoal = asyncHandler(async (req, res) => {
     throw new Error('Goal not found');
   }
 
+  // check for the user
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(401);
+    throw new Error('user not found');
+  }
+
+  // check if the user owns the goal
+  if (goal.user.toString() !== user._id) {
+    res.status(401);
+    throw new Error('Not authorized');
+  }
+
   const updatedGoal = await Goal.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
@@ -46,10 +64,24 @@ const updateGoal = asyncHandler(async (req, res) => {
 // @access: private
 const deleteGoal = asyncHandler(async (req, res) => {
   const goal = await Goal.findById(req.params.id);
-  console.log(goal);
+  // check if goal exists
   if (!goal) {
     res.status(400);
     throw new Error('Goal not found');
+  }
+
+  // check for the user
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(401);
+    throw new Error('user not found');
+  }
+  console.log(goal.user.toString(), user._id.toString());
+  // check if the user owns the goal
+  if (goal.user.toString() !== user._id.toString()) {
+    res.status(401);
+    throw new Error('Not authorized');
   }
 
   await Goal.findByIdAndDelete(req.params.id);
