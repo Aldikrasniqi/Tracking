@@ -15,13 +15,13 @@ const getGoal = asyncHandler(async (req, res) => {
 // @access: private
 const setGoal = asyncHandler(async (req, res) => {
   // check if the goal is provided
-  if (!req.body.goal) {
+  if (!req.body.text) {
     res.status(400);
     throw new Error('Please provide a goal');
   }
 
   const goal = await Goal.create({
-    text: req.body.goal,
+    text: req.body.text,
     user: req.user._id,
   });
 
